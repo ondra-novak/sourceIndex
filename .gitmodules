@@ -1,0 +1,6 @@
+[submodule "libs/jsonrpcserver"]
+	path = libs/jsonrpcserver
+	url = https://github.com/ondra-novak/jsonrpcserver.git
+[submodule "libs/lightspeed"]
+	path = libs/lightspeed
+	url = https://github.com/ondra-novak/lightspeed.git
