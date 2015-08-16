@@ -1,3 +1,4 @@
+#pragma once
 #include "docid.h"
 #include "increment.h"
 #include "lightspeed\base\containers\stringpool.h"

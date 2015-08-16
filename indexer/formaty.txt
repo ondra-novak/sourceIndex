@@ -11,24 +11,17 @@ $indexRoot$/
 +-- erased.dat
 
 
-words - word-index
+words - word-index 
 
-		kazdy se jmenuje jako CRC32-Base64 ID ze slova. Alternativne lze mit viceslov v souboru (viz dale)
-		uvnitr souboru je tento format
-		<word-count> (4b)  - pocet slov v indexu - bezne 1, muze byt ale vic
-
-			<word-CRC32> (4b)  - znova ID slova 
-			<offset>     (4b)  - offset v souboru - bezne 12, ale pokud obsahuje vic slov, je zde jine cislo
-
-
-		<doc-count> (4b)   - pocet dokumentu pro slovo
-		  <doc-ident> (16b)  - md5 dokumentu
-		  <hit-count> (2b)   - pocet zasahu - pro kazdy dokument - pokud je 0, pak dokument nema informace o zásazích
+		kazdy se jmenuje jako CRC32-Base64 ID ze slova. 
+		<doc-ident> (16b)  - md5 dokumentu
+		<hit-count> (2b)   - pocet zasahu - pro kazdy dokument - pokud je 0, pak dokument nema informace o zásazích
 			<class-id> (2b)  - tøída zásahu z ciselniku trid
 			<page>     (2b)  - cislo stránky nebo HIWORD z èísla øádky (>=0x8000)
 			<line>     (2b)  - cislo øádky v dokumentu
 			<col>      (2b)  - cislo sloupce v dokumentu (0 = not used)
 
+		v jednom souboru dokumenty konci na konci souboru.
 
 
 
@@ -54,11 +47,7 @@ classes.txt
 		- uvnitr indexu se trida referencuje dvoubajtovym class-id
 		- max pocet trid je 65535
 
-ereased.dat
-		- obsahuje prostý seznam doc-id, ktere byly s indexu smazány. 
-		- Pøi hledání se musí tyto dokumenty vyøadit
-		- èas od èasu se word-index projde a dokumenty se fyzicky odstraní
-		  
+	  
 
 
 Pøi reindexaci bere indexer soubory v "docs" a reindexuje nalezené soubory. Pokud soubor 

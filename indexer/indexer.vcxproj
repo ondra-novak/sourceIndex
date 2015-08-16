@@ -20,16 +20,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="docid.h" />
+    <ClInclude Include="docIndex.h" />
+    <ClInclude Include="fileInfo.h" />
     <ClInclude Include="increment.h" />
     <ClInclude Include="IndexerMain.h" />
     <ClInclude Include="tokenizer.h" />
     <ClInclude Include="wordid.h" />
+    <ClInclude Include="wordIndex.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="docid.cpp" />
+    <ClCompile Include="docIndex.cpp" />
+    <ClCompile Include="fileInfo.cpp" />
     <ClCompile Include="IndexerMain.cpp" />
     <ClCompile Include="tokenizer.cpp" />
     <ClCompile Include="wordid.cpp" />
+    <ClCompile Include="wordIndex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="formaty.txt" />

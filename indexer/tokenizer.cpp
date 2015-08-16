@@ -92,7 +92,7 @@ namespace SourceIndex {
 
 	static inline bool iswordchar(char c) {
 
-		return (isalpha(c) || c == '_' || c < 0);
+		return (c < 0 || isalpha(c) || c == '_' );
 	}
 
 	template<typename K>
@@ -130,7 +130,7 @@ namespace SourceIndex {
 					cr = lf = false;
 				}
 
-				if (isdigit(c)) {
+				if (c > 0 && isdigit(c)) {
 					wordBuffer.add(c);					
 					while (iter.hasItems() && isdigit(iter.peek()))
 						wordBuffer.add(iter.getNext());
