@@ -59,15 +59,16 @@ namespace SourceIndex {
 
 	}
 
-	void DocIndex::updateDocument(const DocumentMeta &dmeta)
+	bool DocIndex::updateDocument(const DocumentMeta &dmeta)
 	{
 		if (dmeta.files.empty()) {
 			svc.remove(dmeta.path);
-			return;
+			return false;
 		}
 		SeqFileOutput f(dmeta.path, OpenFlags::commitOnClose | OpenFlags::create | OpenFlags::createFolder | OpenFlags::truncate);
 		SeqFileOutBuff<> bf(f);
 		dmeta.writeDocument(bf);
+		return true;
 	}
 
 	void DocIndex::initDocument(const DocumentMeta &origDoc, DocumentMeta &dmeta)

@@ -72,12 +72,12 @@ namespace SourceIndex {
 				if (testBuffer[i] == 0) zr1++;
 				if (testBuffer[i + 1] == 0) zr2++;
 			}
-			if (zr1 * 2 < zr2) {
+			if (zr1 * 2 < zr2 && zr2 > cnt / 2) {
 				//probably UCS2 LE
 				WideToUtf8Reader<Filter<UTFFilter<2, true> >::Read<SeqFileInput> > stream(buffInput);
 				tokenizePlainTextStream(stream); //so index it
 			}
-			else if (zr2 * 2 < zr1) {
+			else if (zr2 * 2 < zr1 && zr1 > cnt / 2) {
 				//probably UCS2 BE
 				WideToUtf8Reader<Filter<UTFFilter<2, false> >::Read<SeqFileInput> > stream(buffInput);
 				tokenizePlainTextStream(stream); //so index it
@@ -103,7 +103,7 @@ namespace SourceIndex {
 		natural col = 1;
 		bool cr = false;
 		bool lf = false;
-		AutoArray<char, StaticAlloc<256> > wordBuffer;
+		AutoArrayStream<char, StaticAlloc<64> > wordBuffer;
 		natural binChar = 0;
 		while (iter.hasItems()) {
 			char c = iter.getNext();
@@ -132,26 +132,18 @@ namespace SourceIndex {
 				}
 
 				if (c > 0 && isdigit(c)) {
-					wordBuffer.add(c);
-					try {
-						while (iter.hasItems() && isdigit(iter.peek()))
-							wordBuffer.add(iter.getNext());
-					} catch (std::exception &e) {
-						LS_LOG.warning("Error read digit: %1 - %2") << wordBuffer << e.what();
-					}
-					flushWord(wordBuffer,line,col);
+					wordBuffer.write(c);
+					while (iter.hasItems() && isdigit(iter.peek()) && wordBuffer.hasItems())
+						wordBuffer.write(iter.getNext());
+					flushWord(wordBuffer.getArray(),line,col);
 					col += wordBuffer.length();
 					wordBuffer.clear();
 				}
 				else if (iswordchar(c)) {
-					wordBuffer.add(c);
-					try {
-						while (iter.hasItems() && iswordchar(iter.peek()))
-							wordBuffer.add(iter.getNext());
-					} catch (std::exception &e) {
-						LS_LOG.warning("Error read word: %1 - %2") << wordBuffer << e.what();
-					}
-					flushWord(wordBuffer, line, col);
+					wordBuffer.write(c);
+					while (iter.hasItems() && iswordchar(iter.peek()) && wordBuffer.hasItems())
+						wordBuffer.write(iter.getNext());
+					flushWord(wordBuffer.getArray(), line, col);
 					col += wordBuffer.length();
 					wordBuffer.clear();
 				}

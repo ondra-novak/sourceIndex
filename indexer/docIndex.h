@@ -50,7 +50,7 @@ namespace SourceIndex {
 
 		void openDocument(const DocID &docId, DocumentMeta &dmeta) const;
 		static void openDocument(const FilePath &path, DocumentMeta &dmeta);
-		void updateDocument(const DocumentMeta &dmeta);
+		bool updateDocument(const DocumentMeta &dmeta);
 		static void initDocument(const DocumentMeta &origDoc, DocumentMeta &dmeta);
 		static void addFile(DocumentMeta &dmeta, const FileInfo &finfo);
 
