@@ -1,10 +1,10 @@
 #pragma once
-#include "lightspeed\utils\FilePath.h"
-#include "lightspeed\base\containers\string.h"
-#include "lightspeed\base\timestamp.h"
+#include "lightspeed/utils/FilePath.h"
+#include "lightspeed/base/containers/string.h"
+#include "lightspeed/base/timestamp.h"
 #include "docid.h"
-#include "lightspeed\base\containers\stringpool.h"
-#include "lightspeed\base\containers\map.h"
+#include "lightspeed/base/containers/stringpool.h"
+#include "lightspeed/base/containers/map.h"
 #include "fileInfo.h"
 
 namespace SourceIndex {

@@ -1,7 +1,7 @@
 #pragma once
-#include "lightspeed\utils\FilePath.h"
-#include "lightspeed\base\timestamp.h"
-#include "lightspeed\base\compare.h"
+#include "lightspeed/utils/FilePath.h"
+#include "lightspeed/base/timestamp.h"
+#include "lightspeed/base/compare.h"
 namespace SourceIndex {
 
 	using namespace LightSpeed;

@@ -1,6 +1,6 @@
 #pragma once
-#include "lightspeed\base\types.h"
-#include "lightspeed\base\containers\autoArray.h"
+#include "lightspeed/base/types.h"
+#include "lightspeed/base/containers/autoArray.h"
 #include "wordid.h"
 #include "docid.h"
 

@@ -1,8 +1,8 @@
 #pragma once
 #include "docid.h"
 #include "increment.h"
-#include "lightspeed\base\containers\stringpool.h"
-#include "lightspeed\base\containers\set.h"
+#include "lightspeed/base/containers/stringpool.h"
+#include "lightspeed/base/containers/set.h"
 
 
 namespace SourceIndex {

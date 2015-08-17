@@ -1,14 +1,14 @@
 #include "wordIndex.h"
-#include "lightspeed\base\containers\map.h"
-#include "lightspeed\base\containers\autoArray.tcc"
+#include "lightspeed/base/containers/map.h"
+#include "lightspeed/base/containers/autoArray.tcc"
 #include "wordid.h"
-#include "lightspeed\base\text\textstream.tcc"
-#include "lightspeed\base\streams\fileiobuff.tcc"
-#include "lightspeed\base\debug\dbglog.h"
-#include "lightspeed\base\containers\convertString.h"
-#include "lightspeed\utils\base64.tcc"
-#include "lightspeed\base\exceptions\fileExceptions.h"
-#include "lightspeed\utils\base64.h"
+#include "lightspeed/base/text/textstream.tcc"
+#include "lightspeed/base/streams/fileiobuff.tcc"
+#include "lightspeed/base/debug/dbglog.h"
+#include "lightspeed/base/containers/convertString.h"
+#include "lightspeed/utils/base64.tcc"
+#include "lightspeed/base/exceptions/fileExceptions.h"
+#include "lightspeed/utils/base64.h"
 
 namespace SourceIndex {
 

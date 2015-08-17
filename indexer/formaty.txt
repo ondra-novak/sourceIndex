@@ -10,15 +10,15 @@ $indexRoot$/
 +-- classes.txt
 +-- erased.dat
 
-
+ 
 words - word-index 
 
 		kazdy se jmenuje jako CRC32-Base64 ID ze slova. 
 		<doc-ident> (16b)  - md5 dokumentu
-		<hit-count> (2b)   - pocet zasahu - pro kazdy dokument - pokud je 0, pak dokument nema informace o zásazích
-			<class-id> (2b)  - tøída zásahu z ciselniku trid
-			<page>     (2b)  - cislo stránky nebo HIWORD z èísla øádky (>=0x8000)
-			<line>     (2b)  - cislo øádky v dokumentu
+		<hit-count> (2b)   - pocet zasahu - pro kazdy dokument - pokud je 0, pak dokument nema informace o zÃ¡sazÃ­ch
+			<class-id> (2b)  - tÅ™Ã­da zÃ¡sahu z ciselniku trid
+			<page>     (2b)  - cislo strÃ¡nky nebo HIWORD z ÄÃ­sla Å™Ã¡dky (>=0x8000)
+			<line>     (2b)  - cislo Å™Ã¡dky v dokumentu
 			<col>      (2b)  - cislo sloupce v dokumentu (0 = not used)
 
 		v jednom souboru dokumenty konci na konci souboru.
@@ -28,14 +28,14 @@ words - word-index
 docs - seznam dokumentu
 
 		- kazdy se jmenuje jako MD5-Base64 ID dokumentu
-		- uvnitø souboru je seznam souborù, kadı na jednom øádku.
+		- uvnitÅ™ souboru je seznam souborÅ¯, kaÅ¾dÃ½ na jednom Å™Ã¡dku.
 		- format: <modtime> <pathname>
 
 wordlist.txt 
-        - obsahuje seznam slov oddìlenıch novım øádkem
-		- slouí pro hledání podobnıch slov
-		- pokud je hledanı token nalezen uvnitø nìkterého slova, mùe bıt slovo pouito k hledání
-		- pro vıpoèet word-id se pouije CRC32
+        - obsahuje seznam slov oddÄ›lenÃ½ch novÃ½m Å™Ã¡dkem
+		- slouÅ¾Ã­ pro hledÃ¡nÃ­ podobnÃ½ch slov
+		- pokud je hledanÃ½ token nalezen uvnitÅ™ nÄ›kterÃ©ho slova, mÅ¯Å¾e bÃ½t slovo pouÅ¾ito k hledÃ¡nÃ­
+		- pro vÃ½poÄet word-id se pouÅ¾ije CRC32
 
 		(wordlist se nacita do pameti behem indexace, po dokonceni indexace se soubor prepise)
 
@@ -50,7 +50,7 @@ classes.txt
 	  
 
 
-Pøi reindexaci bere indexer soubory v "docs" a reindexuje nalezené soubory. Pokud soubor 
-        má vıslednı hash jinı, ne pùvodní, pak je z pùvodního indexu docs smazán a je
-		pøidán do nového indexu (pokud neexistuje, je zaloen).
-		Pokud pùvodní index zùstane prázdnı, pak se jeho ID zaøadí na smazání,
+PÅ™i reindexaci bere indexer soubory v "docs" a reindexuje nalezenÃ© soubory. Pokud soubor 
+        mÃ¡ vÃ½slednÃ½ hash jinÃ½, neÅ¾ pÅ¯vodnÃ­, pak je z pÅ¯vodnÃ­ho indexu docs smazÃ¡n a je
+		pÅ™idÃ¡n do novÃ©ho indexu (pokud neexistuje, je zaloÅ¾en).
+		Pokud pÅ¯vodnÃ­ index zÅ¯stane prÃ¡zdnÃ½, pak se jeho ID zaÅ™adÃ­ na smazÃ¡nÃ­,

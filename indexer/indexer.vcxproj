@@ -11,10 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libs\jsonrpcserver\jsonrpcserver.vcxproj">
+    <ProjectReference Include="..\libs/jsonrpcserver/jsonrpcserver.vcxproj">
       <Project>{9e1232c0-6d3a-4dbb-a636-72f5c4fb13e8}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libs\lightspeed\lightspeed.vcxproj">
+    <ProjectReference Include="..\libs/lightspeed/lightspeed.vcxproj">
       <Project>{9200df2a-2ce6-41fc-b6bf-ef7de0dc95f6}</Project>
     </ProjectReference>
   </ItemGroup>
@@ -71,11 +71,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)libs\jsonrpcserver;$(SolutionDir)libs\lightspeed\src;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)libs/jsonrpcserver;$(SolutionDir)libs/lightspeed/src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)libs\jsonrpcserver;$(SolutionDir)libs\lightspeed\src;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)libs/jsonrpcserver;$(SolutionDir)libs/lightspeed/src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

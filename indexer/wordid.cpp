@@ -1,5 +1,5 @@
 #include "wordid.h"
-#include "lightspeed\utils\crc32.h"
+#include "lightspeed/utils/crc32.h"
 
 namespace SourceIndex {
 

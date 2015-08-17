@@ -1,6 +1,6 @@
-#include "lightspeed\base\containers\constStr.h"
-#include "lightspeed\base\containers\carray.h"
-#include "lightspeed\base\streams\fileio.h"
+#include "lightspeed/base/containers/constStr.h"
+#include "lightspeed/base/containers/carray.h"
+#include "lightspeed/base/streams/fileio.h"
 
 namespace SourceIndex {
 

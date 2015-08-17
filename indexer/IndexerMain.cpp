@@ -1,11 +1,11 @@
 #include "IndexerMain.h"
-#include "lightspeed\base\exceptions\errorMessageException.h"
-#include "lightspeed\base\containers\autoArray.tcc"
+#include "lightspeed/base/exceptions/errorMessageException.h"
+#include "lightspeed/base/containers/autoArray.tcc"
 #include "tokenizer.h"
 #include "wordIndex.h"
 #include "docIndex.h"
-#include "lightspeed\base\streams\standardIO.tcc"
-#include "lightspeed\base\debug\dbglog.h"
+#include "lightspeed/base/streams/standardIO.tcc"
+#include "lightspeed/base/debug/dbglog.h"
 
 
 
@@ -42,9 +42,6 @@ namespace SourceIndex {
 		}
 		else if (args[2] == L"cleanup") {
 			doCleanup();
-		}
-		else if (args[2] == L"optimize") {
-			doOptimize();
 		}
 		else if (args[2] == L"help") {
 			doHelp();
@@ -135,14 +132,9 @@ namespace SourceIndex {
 		});
 	}
 
-	void IndexerMain::doOptimize()
-	{
-		throw std::exception("The method or operation is not implemented.");
-	}
 
 	void IndexerMain::doHelp()
 	{
-		throw std::exception("The method or operation is not implemented.");
 	}
 
 
@@ -166,6 +158,7 @@ namespace SourceIndex {
 		didx.enumDocuments([&](const DocIndex::DocumentMeta &dmeta) {
 			DocIndex::DocumentMeta newMeta;
 			didx.initDocument(dmeta, newMeta);
+			bool dirty = false;
 			dmeta.enumFiles([&](const FileInfo &origFile){
 
 				FileInfo nwFile = FileInfo::getFileInfo(origFile.fullPath);
@@ -174,7 +167,10 @@ namespace SourceIndex {
 					TokenizedDocument doc;
 					SeqFileInput f(nwFile.fullPath, OpenFlags::accessSeq | OpenFlags::shareRead);
 					doc.tokenizePlainText(f);
-					if (doc.binaryFile) return true;
+					if (doc.binaryFile) {
+						dirty = true;
+						return true;
+					}
 					if (!didx.isInIndex(doc.docId)) {
 						LS_LOG.debug("added to index %1") << nwFile.fullPath;
 						widx.addToIndex(doc);
@@ -184,6 +180,8 @@ namespace SourceIndex {
 						didx.addFile(newMeta, nwFile);
 					} 
 					else {
+						dirty = true;
+
 						DocIndex::DocumentMeta odmeta;
 						didx.openDocument(doc.docId, odmeta);
 						didx.addFile(odmeta, nwFile);
@@ -198,7 +196,8 @@ namespace SourceIndex {
 				return true;
 			});
 
-			didx.updateDocument(newMeta);
+			if (dirty)
+				didx.updateDocument(newMeta);
 
 			return true;
 		});

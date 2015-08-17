@@ -1,7 +1,7 @@
 #pragma once
-#include "lightspeed\utils\FilePath.h"
-#include "lightspeed\base\streams\fileio_ifc.h"
-#include "lightspeed\base\containers\stringpool.h"
+#include "lightspeed/utils/FilePath.h"
+#include "lightspeed/base/streams/fileio_ifc.h"
+#include "lightspeed/base/containers/stringpool.h"
 #include "tokenizer.h"
 namespace SourceIndex {
 

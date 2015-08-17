@@ -1,8 +1,8 @@
-#include "lightspeed\base\containers\autoArray.tcc"
-#include "lightspeed\utils\base64.tcc"
-#include "lightspeed\base\containers\convertString.h"
-#include "lightspeed\base\streams\fileiobuff.tcc"
-#include "lightspeed\base\exceptions\fileExceptions.h"
+#include "lightspeed/base/containers/autoArray.tcc"
+#include "lightspeed/utils/base64.tcc"
+#include "lightspeed/base/containers/convertString.h"
+#include "lightspeed/base/streams/fileiobuff.tcc"
+#include "lightspeed/base/exceptions/fileExceptions.h"
 
 #include "docIndex.h"
 

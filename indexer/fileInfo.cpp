@@ -1,5 +1,5 @@
 #include "fileInfo.h"
-#include "lightspeed\base\streams\fileio_ifc.h"
+#include "lightspeed/base/streams/fileio_ifc.h"
 
 namespace SourceIndex {
 

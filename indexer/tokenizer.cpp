@@ -1,10 +1,11 @@
 #include "tokenizer.h"
-#include "lightspeed\base\streams\bufferedio.h"
-#include "lightspeed\base\streams\fileiobuff.h"
-#include "lightspeed\base\text\textstream.tcc"
-#include "lightspeed\base\iter\iteratorFilter.tcc"
-#include "lightspeed\utils\md5iter.h"
+#include "lightspeed/base/streams/bufferedio.h"
+#include "lightspeed/base/streams/fileiobuff.h"
+#include "lightspeed/base/text/textstream.tcc"
+#include "lightspeed/base/iter/iteratorFilter.tcc"
+#include "lightspeed/utils/md5iter.h"
 
+#include "lightspeed/base/debug/dbglog.h"
 namespace SourceIndex {
 
 	template<byte bytes, bool le>
@@ -67,7 +68,7 @@ namespace SourceIndex {
 			natural cnt = buffer.peek(testBuffer, 1024);
 			natural zr1 = 0;
 			natural zr2 = 0;
-			for (natural i = 0; i < cnt; i += 2) {
+			for (natural i = 0; i+1 < cnt; i += 2) {
 				if (testBuffer[i] == 0) zr1++;
 				if (testBuffer[i + 1] == 0) zr2++;
 			}
@@ -131,17 +132,25 @@ namespace SourceIndex {
 				}
 
 				if (c > 0 && isdigit(c)) {
-					wordBuffer.add(c);					
-					while (iter.hasItems() && isdigit(iter.peek()))
-						wordBuffer.add(iter.getNext());
+					wordBuffer.add(c);
+					try {
+						while (iter.hasItems() && isdigit(iter.peek()))
+							wordBuffer.add(iter.getNext());
+					} catch (std::exception &e) {
+						LS_LOG.warning("Error read digit: %1 - %2") << wordBuffer << e.what();
+					}
 					flushWord(wordBuffer,line,col);
 					col += wordBuffer.length();
 					wordBuffer.clear();
 				}
 				else if (iswordchar(c)) {
 					wordBuffer.add(c);
-					while (iter.hasItems() && iswordchar(iter.peek()))
-						wordBuffer.add(iter.getNext());
+					try {
+						while (iter.hasItems() && iswordchar(iter.peek()))
+							wordBuffer.add(iter.getNext());
+					} catch (std::exception &e) {
+						LS_LOG.warning("Error read word: %1 - %2") << wordBuffer << e.what();
+					}
 					flushWord(wordBuffer, line, col);
 					col += wordBuffer.length();
 					wordBuffer.clear();
