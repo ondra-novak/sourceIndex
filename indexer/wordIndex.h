@@ -21,9 +21,9 @@ namespace SourceIndex {
 		static void writeDocHeader(SeqFileOutput wordIndex, DocID docId, Bin::natural16 count);
 		SeqFileOutput openWordIndexForWrite(WordID wid);
 
-		OpenedWordIndexFile openWordIndexForRead(WordID wid);
+		OpenedWordIndexFile openWordIndexForRead(WordID wid) const;
 
-		FilePath getWordIndexPathname(WordID wid);
+		FilePath getWordIndexPathname(WordID wid) const;
 		static void writeMatchHit(SeqFileOutput &wordIndex, const WordMatch &docIncrement);
 
 
@@ -68,7 +68,7 @@ namespace SourceIndex {
 
 
 		template<typename Fn>
-		bool enumDocuments(Fn fn);
+		bool enumDocuments(Fn fn) const;
 
 		void deleteWord();
 		void close();
@@ -86,12 +86,12 @@ namespace SourceIndex {
 			virtual bool operator()(const DocID &docId, Bin::natural16 count, const WordMatch *matches)const = 0;
 		};
 
-		bool enumDocumentsVt(const IEnumDocsCallback &cb);
+		bool enumDocumentsVt(const IEnumDocsCallback &cb) const;
 
 	};
 
 	template<typename Fn>
-	bool SourceIndex::OpenedWordIndexFile::enumDocuments(Fn fn)
+	bool SourceIndex::OpenedWordIndexFile::enumDocuments(Fn fn) const
 	{
 		class Cb : public IEnumDocsCallback {
 		public:

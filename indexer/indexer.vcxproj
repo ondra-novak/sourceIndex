@@ -24,6 +24,7 @@
     <ClInclude Include="fileInfo.h" />
     <ClInclude Include="increment.h" />
     <ClInclude Include="IndexerMain.h" />
+    <ClInclude Include="search.h" />
     <ClInclude Include="tokenizer.h" />
     <ClInclude Include="wordid.h" />
     <ClInclude Include="wordIndex.h" />
@@ -33,6 +34,7 @@
     <ClCompile Include="docIndex.cpp" />
     <ClCompile Include="fileInfo.cpp" />
     <ClCompile Include="IndexerMain.cpp" />
+    <ClCompile Include="search.cpp" />
     <ClCompile Include="tokenizer.cpp" />
     <ClCompile Include="wordid.cpp" />
     <ClCompile Include="wordIndex.cpp" />

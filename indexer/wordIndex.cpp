@@ -105,7 +105,13 @@ namespace SourceIndex {
 
 
 
-	FilePath WordIndex::getWordIndexPathname(WordID wid)
+	SourceIndex::OpenedWordIndexFile WordIndex::openWordIndexForRead(WordID wid) const
+	{
+		FilePath path = getWordIndexPathname(wid);
+		return OpenedWordIndexFile(path, svc);
+	}
+
+	FilePath WordIndex::getWordIndexPathname(WordID wid) const
 	{
 		StringA name = convertString(Base64Encoder(true, true), ConstBin(reinterpret_cast<const byte *>(&wid), sizeof(wid)));
 		StringA subdir = convertString(HexEncoder<>(), ConstBin(reinterpret_cast<const byte *>(&wid), 1));
@@ -173,7 +179,7 @@ namespace SourceIndex {
 
 	}
 
-	bool OpenedWordIndexFile::enumDocumentsVt(const IEnumDocsCallback &cb)
+	bool OpenedWordIndexFile::enumDocumentsVt(const IEnumDocsCallback &cb) const
 	{
 		IMappedFile::MappedRegion rgn = mappedFile->map(IFileIOServices::fileOpenRead, false);
 		ConstBin section(reinterpret_cast<const byte *>(rgn.address), fsize);
