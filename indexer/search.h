@@ -12,8 +12,6 @@ namespace SourceIndex {
 	class Search
 	{
 	public:
-		Search();
-		~Search();
 
 		struct ResultItem {
 			DocID document;
@@ -43,13 +41,13 @@ namespace SourceIndex {
 		@param windex word index
 		@param query query
 		*/
-		void search(WordIndex &windex, const Query &query, Result &result);
+		static void search(WordIndex &windex, const Query &query, Result &result);
 
 		
 	protected:
-		bool testQuerySorted(const Query & query);
-		void search2(WordIndex & windex, const Query & query, Result &result);
-		Query sortQuery(Query query);
+		static bool testQuerySorted(const Query & query);
+		static void search2(WordIndex & windex, const Query & query, Result &result);
+		static Query sortQuery(Query query);
 
 		class QueryCmp;
 		
@@ -66,13 +64,23 @@ namespace SourceIndex {
 		typedef Map<CPDoc, MultiMatchSet, CmpCPDoc > DocMap;
 		typedef AutoArray<OpenedWordIndexFile> WordIndexSet;
 
-		natural createDocMap(DocMap &map, const WordIndexSet &wis, const Query &query, natural p, natural group);
-		void mergeExclude(DocMap &docMap, const DocMap &andMap);
-		void mergeAnd(DocMap &docMap, const DocMap &andMap);
-		void buildResult(const DocMap &docMap, const Query & query, Result &result);
-		float findBestHit(const MultiMatchSet &matches, AutoArray<WordMatch> &result, ConstStringT<bool> groups, natural startPos);
+		static natural createDocMap(DocMap &map, const WordIndexSet &wis, const Query &query, natural p, natural group);
+		static void mergeExclude(DocMap &docMap, const DocMap &andMap);
+		static void mergeAnd(DocMap &docMap, const DocMap &andMap);
+		static void buildResult(const DocMap &docMap, const Query & query, Result &result);
+		static natural findBestHit(const MultiMatchSet &matches, AutoArray<WordMatch> &result, ConstStringT<bool> groups, natural startPos);
+		static std::pair<WordMatch,natural> findNearestMatch(const WordMatchSet &matchSet, const WordMatch &relativeTo);
+
+
 		class UnionMatches;
 	};
 
+
+	class QueryBuilder {
+	public:
+
+		Search::Query buildQuery(WordIndex &widx, ConstStrA textQuery, bool caseSensitive, bool wholeWords);
+
+	};
 
 }

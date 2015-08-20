@@ -3,16 +3,9 @@
 #include "lightspeed/base/containers/autoArray.tcc"
 #include "lightspeed/base/containers/sort.tcc"
 
+#include "tokenizer.h"
 namespace SourceIndex {
 
-	Search::Search()
-	{
-	}
-
-
-	Search::~Search()
-	{
-	}
 
 	void Search::search(WordIndex &windex, const Query &query, Result &result)
 	{
@@ -111,6 +104,12 @@ namespace SourceIndex {
 				rightIter.skip();
 			}
 		}
+
+		while (leftIter.hasItems()) {
+			const DocMap::Entity &e1 = leftIter.getNext();
+			newDocMap.insert(e1.key, e1.value);
+		}
+
 		newDocMap.swap(docMap);
 	}
 
@@ -194,17 +193,85 @@ namespace SourceIndex {
 
 	}
 
+	static natural subAbs(natural a, natural b) {
+		if (a < b) return b - a;
+		else return a - b;
+	}
 
-	float Search::findBestHit(const MultiMatchSet &matches, AutoArray<WordMatch> &result, ConstStringT<bool> groups, natural startPos)
-	{
-		float relevance = 1;
+	std::pair<WordMatch,natural> Search::findNearestMatch(const WordMatchSet &matchSet, const WordMatch &relativeTo) {
+		if (matchSet.empty()) return std::make_pair(relativeTo,natural(0));
 
-		//TODO implement findBestHit for group
+		natural bestScore = naturalNull;
+		WordMatch bestMatch;
 
-		if (startPos < matches.length()) {
-			return relevance * findBestHit(matches, result, groups, startPos);
+		for (natural i = 0; i < matchSet.length(); i++) {
+			natural score;
+			const WordMatch &cur = matchSet[i];
+			if (relativeTo.getPage() != cur.getPage()) {
+				score = subAbs(relativeTo.getPage(),cur.getPage()) * 1000;
+			} else if (relativeTo.getLine() != cur.getLine()) {
+				score = subAbs(relativeTo.getLine(),cur.getLine()) * 100;
+			} else {
+				if (cur.getCol() < relativeTo.getCol()) {
+					score = (relativeTo.getCol() - cur.getCol()) * 2;
+				} else {
+					score = (cur.getCol() - relativeTo.getCol());
+				}
+			}
+			if (score < bestScore) {
+				bestMatch = cur;
+				bestScore = score;
+			}
 		}
-		else return relevance;
+
+		return std::make_pair(bestMatch,bestScore);
+
+	}
+
+
+	natural Search::findBestHit(const MultiMatchSet &matches, AutoArray<WordMatch> &result, ConstStringT<bool> groups, natural startPos)
+	{
+		natural score = 0;
+		natural groupEnd = groups.find(true,startPos+1);
+		if (groupEnd == naturalNull) groupEnd = groups.length();
+		if (startPos == groupEnd) return 0;
+
+		if (startPos + 1 == groupEnd) {
+			if (matches[startPos].empty()) result.add(WordMatch());
+			else result.add(matches[startPos][0]);
+			return score + findBestHit(matches,result,groups,startPos+1);
+		} else {
+			const WordMatchSet &first = matches[startPos];
+			const WordMatchSet &second = matches[startPos+1];
+			WordMatch bestFirst;
+			WordMatch bestSecond;
+			natural bestFirstScore = naturalNull;
+			for (natural i = 0; i < first.length(); i++) {
+				std::pair<WordMatch, natural> res = findNearestMatch(second,first[i]);
+				if (res.second < bestFirstScore) {
+					bestFirst = first[i];
+					bestSecond = res.first;
+					bestFirstScore = res.second;
+				}
+			}
+			result.add(bestFirst);
+			result.add(bestSecond);
+			WordMatch relTo = bestSecond;
+			score = bestFirstScore;
+			for (natural i = startPos+2; i < groupEnd; i++) {
+				std::pair<WordMatch, natural> res = findNearestMatch(matches[i], relTo);
+				score += res.second;
+				result.add(res.first);
+				relTo = res.first;
+			}
+		}
+
+		if (groupEnd < groups.length()) {
+			return score+ findBestHit(matches,result,groups,groupEnd);
+		} else {
+			return score;
+		}
+
 	}
 
 	bool Search::CmpCPDoc::operator()(CPDoc a, CPDoc b) const
@@ -212,4 +279,64 @@ namespace SourceIndex {
 		return *a < *b;
 	}
 
+	Search::Query SourceIndex::QueryBuilder::buildQuery(WordIndex& widx, ConstStrA textQuery, bool caseSensitive, bool wholeWords) {
+
+		Search::Query query;
+
+		class TokenizerCB: public AbstractPlainTextTokenizer {
+		public:
+			Search::Query &query;
+			WordIndex& widx;
+			bool caseSensitive;
+			bool wholeWords;
+			natural n;
+			bool nextGroup;
+			bool nextIsExclusion;
+
+
+			TokenizerCB(WordIndex& widx, Search::Query &query, bool caseSensitive, bool wholeWords)
+				:query(query),widx(widx),caseSensitive(caseSensitive),wholeWords(wholeWords),n(0),nextGroup(true),nextIsExclusion(false) {}
+
+			virtual void flushWord(ConstStrA word, natural page, natural line, natural col) {
+				Search::QueryItem qi;
+				qi.group = nextGroup;
+				qi.position = nextIsExclusion?naturalNull:n;
+				qi.word = getWordId(word);
+				query.add(qi);
+				if (!caseSensitive || !wholeWords) {
+					widx.findWords(word, caseSensitive, wholeWords, this);
+				}
+				nextGroup = false;
+				n++;
+				nextIsExclusion = false;
+			}
+
+			virtual void foundWord(ConstStrA word) {
+				Search::QueryItem qi;
+				qi.group = false;
+				qi.position = nextIsExclusion?naturalNull:n;
+				qi.word = getWordId(word);
+				query.add(qi);
+			}
+
+			virtual void flushSymbol(ConstStrA word,natural page, natural line, natural col) {
+				if (word == ConstStrA(',')) nextGroup = true;
+				else if (word == ConstStrA('-')) nextIsExclusion = true;
+			}
+
+
+			virtual void fileIsBinary() {
+
+			}
+
+		};
+
+		TokenizerCB tcb(widx,query,caseSensitive,wholeWords);
+		ConstStrA::Iterator iter = textQuery.getFwIter();
+		tcb.tokenizePlainTextStream(iter);
+		return query;
+
+	}
+
 }
+

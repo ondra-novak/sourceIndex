@@ -27,13 +27,41 @@ namespace SourceIndex {
 	};
 
 
-	void TokenizedDocument::tokenizePlainText(SeqFileInput input)
-	{
+	class DocTokenize: public AbstractPlainTextTokenizer {
+	public:
+
+		TokenizedDocument &doc;
+		DocTokenize(TokenizedDocument &doc):doc(doc) {}
+
+		virtual void flushWord(ConstStrA word,natural page, natural line, natural col) {
+			doc.addWord(word,0,line,col);
+		}
+		virtual void flushSymbol(ConstStrA word,natural page, natural line, natural col) {
+
+		}
+		virtual void fileIsBinary() {
+			doc.binaryFile = true;
+		}
+	};
+
+	void TokenizedDocument::tokenizePlainText(SeqFileInput input) {
+
 		docIncrement.clear();
 		wordList.clear();
 		classList.clear();
 		wordListPool.clear();
 		binaryFile = false;
+
+		DocTokenize dt(*this);
+
+		dt.tokenize(input);
+
+		updateDocId();
+
+	}
+
+	void AbstractPlainTextTokenizer::tokenize(SeqFileInput input)
+	{
 
 		SeqFileInBuff<> buffInput(input);
 		byte bomtest[4];
@@ -87,7 +115,6 @@ namespace SourceIndex {
 				tokenizePlainTextStream(stream); //so index it
 			}
 		}
-		updateDocId();
 	}
 
 
@@ -96,8 +123,18 @@ namespace SourceIndex {
 		return (c < 0 || isalpha(c) || c == '_' );
 	}
 
+	static inline bool isdigitchar(char c) {
+
+		return (c > 0 && isdigit(c));
+	}
+
+	static inline bool issymbol(char c) {
+
+		return (c > 0 && !isspace(c) && !isalnum(c));
+	}
+
 	template<typename K>
-	void SourceIndex::TokenizedDocument::tokenizePlainTextStream(IIterator<char, K> &iter)
+	void AbstractPlainTextTokenizer::tokenizePlainTextStream(IIterator<char, K> &iter)
 	{
 		natural line = 1;
 		natural col = 1;
@@ -120,7 +157,7 @@ namespace SourceIndex {
 				binChar++;
 				//if more bin characters found, mark file binary and exit
 				if (binChar > 5) {
-					binaryFile = true;
+					fileIsBinary();
 					return;
 				}
 			}
@@ -131,11 +168,11 @@ namespace SourceIndex {
 					cr = lf = false;
 				}
 
-				if (c > 0 && isdigit(c)) {
+				if (isdigitchar(c)) {
 					wordBuffer.write(c);
-					while (iter.hasItems() && isdigit(iter.peek()) && wordBuffer.hasItems())
+					while (iter.hasItems() && isdigitchar(iter.peek()) && wordBuffer.hasItems())
 						wordBuffer.write(iter.getNext());
-					flushWord(wordBuffer.getArray(),line,col);
+					flushWord(wordBuffer.getArray(),0,line,col);
 					col += wordBuffer.length();
 					wordBuffer.clear();
 				}
@@ -143,7 +180,15 @@ namespace SourceIndex {
 					wordBuffer.write(c);
 					while (iter.hasItems() && iswordchar(iter.peek()) && wordBuffer.hasItems())
 						wordBuffer.write(iter.getNext());
-					flushWord(wordBuffer.getArray(), line, col);
+					flushWord(wordBuffer.getArray(), 0,line, col);
+					col += wordBuffer.length();
+					wordBuffer.clear();
+				}
+				else if (issymbol(c)) {
+					wordBuffer.write(c);
+					while (iter.hasItems() && issymbol(iter.peek()) && wordBuffer.hasItems())
+						wordBuffer.write(iter.getNext());
+					flushSymbol(wordBuffer.getArray(), 0,line, col);
 					col += wordBuffer.length();
 					wordBuffer.clear();
 				}
@@ -154,18 +199,21 @@ namespace SourceIndex {
 		}
 	}
 
-	void TokenizedDocument::flushWord(ConstStrA word, natural line, natural col)
+	void TokenizedDocument::addWord(ConstStrA word, natural page, natural line, natural col)
 	{
 		const StringPoolA::Str *w = wordList.find(word);
 		if (w == 0) {
 			wordList.insert(wordListPool.add(word));
-			flushWord(word,line,col);
+			addWord(word,page,line,col);
 		}
 		else {
 			WordIncrement wi;
 			wi.wordID = getWordId(word);
 			if (col > 0xFFFF) col = 0xFFFF;
-			wi.match = WordMatch(0, Bin::natural32(line), Bin::natural16(col));
+			if (page == 0)
+				wi.match = WordMatch(0, Bin::natural32(line), Bin::natural16(col));
+			else
+				wi.match = WordMatch(0, Bin::natural16(page), Bin::natural16(line), Bin::natural16(col));
 			docIncrement.add(wi);
 		}
 

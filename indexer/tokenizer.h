@@ -16,13 +16,28 @@ namespace SourceIndex {
 		bool binaryFile;
 
 		void tokenizePlainText(SeqFileInput input);
+		void addWord(ConstStrA word, natural page, natural line, natural col);
 
 	private:
 		template<typename K>
 		void tokenizePlainTextStream(IIterator<char, K> &iter);
 
-		void flushWord(ConstStrA word, natural line, natural col);
 		void updateDocId();
+	};
+
+
+	class AbstractPlainTextTokenizer {
+	public:
+
+		void tokenize(SeqFileInput input);
+
+		template<typename K>
+		void tokenizePlainTextStream(IIterator<char, K> &iter);
+
+		virtual void flushWord(ConstStrA word, natural page, natural line, natural col) = 0;
+		virtual void flushSymbol(ConstStrA word, natural page, natural line, natural col) = 0;
+		virtual void fileIsBinary() = 0;
+
 	};
 
 }
