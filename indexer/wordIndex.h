@@ -2,6 +2,8 @@
 #include "lightspeed/utils/FilePath.h"
 #include "lightspeed/base/streams/fileio_ifc.h"
 #include "lightspeed/base/containers/stringpool.h"
+
+#include "lightspeed/base/containers/map.h"
 #include "tokenizer.h"
 namespace SourceIndex {
 
@@ -42,11 +44,14 @@ namespace SourceIndex {
 		IFileIOServices &svc;
 		StringPoolA wordListPool;
 		Set<StringPoolA::Str> wordListSet;
+		MultiMap<StringPoolA::Str, StringPoolA::Str> caseMap;
 
 		class IEnumIndexCb {
 		public:
 			virtual bool operator()(OpenedWordIndexFile &windex) const = 0;
 		};
+
+		void createCaseMap();
 
 		bool enumIndexVt(const IEnumIndexCb &cb);
 		template<typename PFI>

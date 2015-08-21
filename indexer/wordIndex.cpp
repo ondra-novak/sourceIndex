@@ -1,4 +1,6 @@
 #include "wordIndex.h"
+
+#include <lightspeed/base/streams/utf.h>
 #include "lightspeed/base/containers/map.h"
 #include "lightspeed/base/containers/autoArray.tcc"
 #include "wordid.h"
@@ -9,6 +11,7 @@
 #include "lightspeed/utils/base64.tcc"
 #include "lightspeed/base/exceptions/fileExceptions.h"
 #include "lightspeed/utils/base64.h"
+#include <cwctype>
 
 namespace SourceIndex {
 
@@ -126,9 +129,24 @@ namespace SourceIndex {
 		wordIndex.blockWrite(&wm, sizeof(wm), true);
 	}
 
+
+
+
+
 	void WordIndex::findWords(ConstStrA word, bool caseSensitive, bool wholeWords, IFindWordCB *cb)
 	{
+		/*
+		if (!caseSensitive) {
+			if (caseMap.empty()) createCaseMap();
+			auto klist = caseMap.find(word);
+			while (klist.hasItems()) {
+			}
 
+		} else {
+
+			if (!wholeWords)
+				findInnerWords(word,cb);
+		}*/
 	}
 
 	void OpenedWordIndexFile::copyDocRecord(SeqFileOutput &wordIndex, DocID docId, Bin::natural16 count, const WordMatch *matches)
@@ -203,4 +221,32 @@ namespace SourceIndex {
 		return true;
 	}
 
+	void WordIndex::createCaseMap() {
+		caseMap.clear();
+		AutoArray<StringPoolA::Str> newWords;
+		AutoArrayStream<char> buffer;
+		for (auto iter = wordListSet.getFwIter(); iter.hasItems();) {
+			ConstStrA str = iter.getNext();
+			buffer.clear();
+			Utf8ToWideReader<ConstStrA::Iterator> wideChars(str.getFwIter());
+			WideToUtf8Writer<AutoArrayStream<char> &> utfChars(buffer);
+			while (wideChars.hasItems()) utfChars.write(towlower(wideChars.getNext()));
+			ConstStrA locapstr(buffer.getArray());
+			if (locapstr == str) continue;
+			const StringPoolA::Str *exist = wordListSet.find(locapstr);
+			if (exist) {
+				caseMap.insert(*exist, str);
+			} else {
+				StringPoolA::Str w = wordListPool.add(locapstr);
+				newWords.add(w);
+				caseMap.insert(w,str);
+			}
+		}
+
+		for (auto iter = newWords.getFwIter(); iter.hasItems();) {
+			wordListSet.insert(iter.getNext());
+		}
+	}
+
 }
+

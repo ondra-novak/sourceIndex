@@ -133,6 +133,7 @@ namespace SourceIndex {
 		return (c > 0 && !isspace(c) && !isalnum(c));
 	}
 
+
 	template<typename K>
 	void AbstractPlainTextTokenizer::tokenizePlainTextStream(IIterator<char, K> &iter)
 	{
@@ -226,5 +227,7 @@ namespace SourceIndex {
 		hash.finish();
 		docId = hash.digest();
 	}
+
+	template void AbstractPlainTextTokenizer::tokenizePlainTextStream(IIterator<char, ConstStrA::Iterator> &);
 
 }
