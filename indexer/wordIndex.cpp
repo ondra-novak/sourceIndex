@@ -126,6 +126,11 @@ namespace SourceIndex {
 		wordIndex.blockWrite(&wm, sizeof(wm), true);
 	}
 
+	void WordIndex::findWords(ConstStrA word, bool caseSensitive, bool wholeWords, IFindWordCB *cb)
+	{
+
+	}
+
 	void OpenedWordIndexFile::copyDocRecord(SeqFileOutput &wordIndex, DocID docId, Bin::natural16 count, const WordMatch *matches)
 	{
 		WordIndex::writeDocHeader(wordIndex, docId, count);

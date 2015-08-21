@@ -283,7 +283,7 @@ namespace SourceIndex {
 
 		Search::Query query;
 
-		class TokenizerCB: public AbstractPlainTextTokenizer {
+		class TokenizerCB: public AbstractPlainTextTokenizer, public WordIndex::IFindWordCB {
 		public:
 			Search::Query &query;
 			WordIndex& widx;

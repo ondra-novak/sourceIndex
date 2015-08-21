@@ -26,6 +26,12 @@ namespace SourceIndex {
 		FilePath getWordIndexPathname(WordID wid) const;
 		static void writeMatchHit(SeqFileOutput &wordIndex, const WordMatch &docIncrement);
 
+		class IFindWordCB {
+		public:
+			virtual void foundWord(ConstStrA word) = 0;
+		};
+
+		void findWords(ConstStrA word, bool caseSensitive, bool wholeWords, IFindWordCB *cb);
 
 
 		template<typename Fn>
