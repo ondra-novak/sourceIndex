@@ -16,7 +16,7 @@ namespace SourceIndex {
 		struct ResultItem {
 			DocID document;
 			AutoArray<WordMatch> matches;
-			float relevance;
+			natural score;
 		};
 
 		typedef AutoArray<ResultItem> Result;
@@ -31,6 +31,8 @@ namespace SourceIndex {
 			///specifies starting of new group, which has no connection with previous group
 			/**This means, that there will no relevance penalty, if next words will be located on other place in the document */
 			bool group;
+			///Exact words has baseScore equal 0, case not-matching words = 1, begin of word = 2, end of word = 3, any substring = 4
+			natural baseScore;
 		};
 
 		typedef AutoArray<QueryItem> Query;

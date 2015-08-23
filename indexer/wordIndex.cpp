@@ -1,9 +1,10 @@
+#include <cwctype>
 #include "wordIndex.h"
+#include "wordid.h"
 
 #include <lightspeed/base/streams/utf.h>
 #include "lightspeed/base/containers/map.h"
 #include "lightspeed/base/containers/autoArray.tcc"
-#include "wordid.h"
 #include "lightspeed/base/text/textstream.tcc"
 #include "lightspeed/base/streams/fileiobuff.tcc"
 #include "lightspeed/base/debug/dbglog.h"
@@ -11,15 +12,14 @@
 #include "lightspeed/utils/base64.tcc"
 #include "lightspeed/base/exceptions/fileExceptions.h"
 #include "lightspeed/utils/base64.h"
-#include <cwctype>
 
 namespace SourceIndex {
 
 
 
-	WordIndex::WordIndex(const FilePath &path, const FilePath &wordList) 
+	WordIndex::WordIndex(const FilePath &path, const FilePath &wordIndexMap) 
 		:path(path)
-		, wordList(wordList)
+		, wordIndexFile(wordIndexMap)
 		, svc(IFileIOServices::getIOServices())
 	{
 
@@ -35,18 +35,18 @@ namespace SourceIndex {
 	void WordIndex::init()
 	{
 		checkPath();
-		try {
-			SeqFileInBuff<> words(wordList,0);
-			ScanTextA scan(words);
-			while (scan.hasItems()) {
-				if (scan.readLine()) {
-					wordListSet.insert(wordListPool.add(scan[1].str()));
-				}
-			}
-		}
-		catch (std::exception &e) {
-			LS_LOG.warning("Error reading wordlist: %1") << e.what();
-		}
+		if (svc.canOpenFile(wordIndexFile, IFileIOHandler::fileAccessible))
+			wordIndex.open(wordIndexFile);
+		else
+			wordIndex.init(wordIndexFile);
+
+	}
+
+	void WordIndex::commit()
+	{
+		WordIndexMap localMap;
+		localMap.loadToMemory(newWordIndex);
+		wordIndex.merge(wordIndex, localMap, std::less<WordID>());
 	}
 
 	void WordIndex::addToIndex(const TokenizedDocument &doc)
@@ -72,13 +72,13 @@ namespace SourceIndex {
 				}
 			}
 		}
-		SeqFileOutBuff<> wordListFile(wordList, OpenFlags::create | OpenFlags::append);
-		PrintTextA wordListPrint(wordListFile);
 		for (Set<StringPoolA::Str>::Iterator iter = doc.wordList.getFwIter(); iter.hasItems();) {
 			ConstStrA word = iter.getNext();
-			if (wordListSet.find(word) == 0) {
-				wordListPrint("%1\n") << word;
-				wordListSet.insert(wordListPool.add(word));
+			WordID wordId = getWordId(word);
+			bool exists = false;
+			newWordConstrain.insert(wordId, &exists);
+			if (!exists) {
+				indexNewWord(word, wordId);
 			}
 		}
 
@@ -130,23 +130,37 @@ namespace SourceIndex {
 	}
 
 
-
-
-
-	void WordIndex::findWords(ConstStrA word, bool caseSensitive, bool wholeWords, IFindWordCB *cb)
+	void WordIndex::findWords(WordID word, Flags flags, IFindWordCB *cb)
 	{
-		/*
-		if (!caseSensitive) {
-			if (caseMap.empty()) createCaseMap();
-			auto klist = caseMap.find(word);
-			while (klist.hasItems()) {
+		
+		if (flags == flgLowerCase) {
+			WordIndexMap::Iterator iter = wordIndex.findRange(WordIndexKey(word, 0), WordIndexKey(word, 0xFF));
+			while (iter.hasItems()) {
+				const KeyValue &kv = iter.getNext();
+				cb->foundWord(kv.second, kv.first.flags);
 			}
-
-		} else {
-
-			if (!wholeWords)
-				findInnerWords(word,cb);
-		}*/
+		}
+		else if (flags == 0) {
+			WordIndexMap::Iterator iter = wordIndex.findRange(WordIndexKey(word, 0), WordIndexKey(word, flgWordBegin|flgWordEnd));
+			while (iter.hasItems()) {
+				const KeyValue &kv = iter.getNext();
+				cb->foundWord(kv.second, kv.first.flags);
+			}
+		}
+		else {
+			if (flags & flgLowerCase) {
+				WordIndexMap::Iterator iter = wordIndex.find(WordIndexKey(word, flags));
+				while (iter.hasItems()) {
+					const KeyValue &kv = iter.getNext();
+					cb->foundWord(kv.second, kv.first.flags);
+				}
+			}
+			WordIndexMap::Iterator iter = wordIndex.find(WordIndexKey(word, flags & ~flgLowerCase));
+			while (iter.hasItems()) {
+				const KeyValue &kv = iter.getNext();
+				cb->foundWord(kv.second, kv.first.flags);
+			}
+		}
 	}
 
 	void OpenedWordIndexFile::copyDocRecord(SeqFileOutput &wordIndex, DocID docId, Bin::natural16 count, const WordMatch *matches)
@@ -169,6 +183,38 @@ namespace SourceIndex {
 			}
 		}
 		return true;
+	}
+
+	void WordIndex::indexNewWord(ConstStrA word, WordID wordId)
+	{
+		const natural minSubstr = 2;
+		natural len = word.length();
+		if (len <= minSubstr) {
+			WordID lw = getLocaseWordId(word);
+			if (lw != wordId) {
+				newWordIndex.add(KeyValue(WordIndexKey(lw, flgLowerCase | flgWordEnd | flgWordBegin), wordId));
+			}			
+		}
+		else {
+			natural rlen = len - minSubstr;
+			for (natural i = 0; i < rlen; i++) {
+				for (natural j = 1; j <= rlen - i; j++) {
+					ConstStrA substr = word.mid(i, j + minSubstr);
+					Flags flg;
+					if (i == 0) flg |= flgWordBegin;
+					if (i + j == rlen) flg |= flgWordEnd;
+					WordID wid1 = getWordId(substr);
+					if (wid1 != wordId) {
+						newWordIndex.add(KeyValue(WordIndexKey(wid1, flg), wordId));
+					}
+					WordID wid2 = getLocaseWordId(substr);
+					if (wid2 != wordId && wid2 != wid1) {
+						newWordIndex.add(KeyValue(WordIndexKey(wid2, flg | flgLowerCase), wordId));
+					}
+				}
+			}
+		}
+
 	}
 
 	bool WordIndex::enumIndexVt(const IEnumIndexCb &cb)
@@ -221,32 +267,6 @@ namespace SourceIndex {
 		return true;
 	}
 
-	void WordIndex::createCaseMap() {
-		caseMap.clear();
-		AutoArray<StringPoolA::Str> newWords;
-		AutoArrayStream<char> buffer;
-		for (auto iter = wordListSet.getFwIter(); iter.hasItems();) {
-			ConstStrA str = iter.getNext();
-			buffer.clear();
-			Utf8ToWideReader<ConstStrA::Iterator> wideChars(str.getFwIter());
-			WideToUtf8Writer<AutoArrayStream<char> &> utfChars(buffer);
-			while (wideChars.hasItems()) utfChars.write(towlower(wideChars.getNext()));
-			ConstStrA locapstr(buffer.getArray());
-			if (locapstr == str) continue;
-			const StringPoolA::Str *exist = wordListSet.find(locapstr);
-			if (exist) {
-				caseMap.insert(*exist, str);
-			} else {
-				StringPoolA::Str w = wordListPool.add(locapstr);
-				newWords.add(w);
-				caseMap.insert(w,str);
-			}
-		}
-
-		for (auto iter = newWords.getFwIter(); iter.hasItems();) {
-			wordListSet.insert(iter.getNext());
-		}
-	}
-
+	
 }
 

@@ -161,7 +161,7 @@ namespace SourceIndex {
 
 	struct CmpResultItem {
 		bool operator()(const Search::ResultItem &a, const Search::ResultItem &b) {
-			return a.relevance > b.relevance;
+			return a.score < b.score;
 		}
 	};
 
@@ -183,7 +183,7 @@ namespace SourceIndex {
 		for (DocMap::Iterator iter = docMap.getFwIter(); iter.hasItems();) {
 			const DocMap::Entity &e = iter.getNext();
 			ResultItem ritem;
-			ritem.relevance = findBestHit(e.value, ritem.matches, groupSep,0);
+			ritem.score = findBestHit(e.value, ritem.matches, groupSep,0);
 			ritem.document = *e.key;
 			result.add(ritem);
 			resheap.push();
@@ -283,51 +283,82 @@ namespace SourceIndex {
 
 		Search::Query query;
 
-		class TokenizerCB: public AbstractPlainTextTokenizer, public WordIndex::IFindWordCB {
+		class TokenizerCB: public AbstractPlainTextTokenizer {
 		public:
-			Search::Query &query;
-			WordIndex& widx;
-			bool caseSensitive;
-			bool wholeWords;
-			natural n;
-			bool nextGroup;
-			bool nextIsExclusion;
+			
+			TokenizerCB(bool caseNormalize) :nextIsBegin(false), nextIsGroup(false),caseNormalize(caseNormalize) {}
+
+			struct BaseWord {
+				WordID word;
+				///group separator - separated words don't need to be near
+				bool newGroup;
+				///search begin of the word - with wordEnd it searches whole word
+				bool wordBegin;
+				///search end of the word - with wordBegin it searches whole word
+				bool wordEnd;
+				///exclude this word
+				bool exclusion;
+				///inbetween search where this word has wordBegin and next word has wordEnd
+				/**
+				In this case, it is allowed to accept both words on the same hit. This is special
+				case when begin*end word is searched: "sour*dex" can match "sourceIndex" or "source index" (with
+				worse score)
+
+				if used with exclusion, second word must have at least one hit below to first hit of the first word.
+				otherwise exclusion fails
+				*/
+				bool inbetween;
+			};
 
 
-			TokenizerCB(WordIndex& widx, Search::Query &query, bool caseSensitive, bool wholeWords)
-				:query(query),widx(widx),caseSensitive(caseSensitive),wholeWords(wholeWords),n(0),nextGroup(true),nextIsExclusion(false) {}
+			virtual void flushWord(ConstStrA word, natural page, natural line, natural col) override
+			{
+				BaseWord bw;
+				if (caseNormalize) bw.word = getLocaseWordId(word);
+				else bw.word = getWordId(word);
+				bw.wordEnd = nextIsEnd; nextIsEnd = false;
+				bw.newGroup = nextIsGroup; nextIsGroup = false;
+				bw.exclusion = nextIsExcluded; nextIsExcluded = false;
+				bw.wordBegin = false;
+				words.add(bw);
 
-			virtual void flushWord(ConstStrA word, natural page, natural line, natural col) {
-				Search::QueryItem qi;
-				qi.group = nextGroup;
-				qi.position = nextIsExclusion?naturalNull:n;
-				qi.word = getWordId(word);
-				query.add(qi);
-				if (!caseSensitive || !wholeWords) {
-					widx.findWords(word, caseSensitive, wholeWords, this);
+			}
+
+			virtual void flushSymbol(ConstStrA word, natural page, natural line, natural col) override
+			{
+				for (natural i = 0; i < word.length(); i++) {
+					switch (word[i]) {
+					case '-': nextIsExcluded = true;
+						break;
+					case ',': nextIsGroup = true; nextIsExcluded = false; nextIsEnd = false;
+						break;
+					case '^': nextIsEnd = true;
+						break;
+					case '$': if (!nextIsGroup && !words.empty()) words(words.length() - 1).wordBegin = true;
+						break;
+					case '*':
+					case '%': nextIsEnd = true;
+						if (!nextIsGroup && !words.empty()) {
+							words(words.length() - 1).wordBegin = true;
+							words(words.length() - 1).inbetween = true;
+							break;
+						}
+					}
 				}
-				nextGroup = false;
-				n++;
-				nextIsExclusion = false;
 			}
 
-			virtual void foundWord(ConstStrA word) {
-				Search::QueryItem qi;
-				qi.group = false;
-				qi.position = nextIsExclusion?naturalNull:n;
-				qi.word = getWordId(word);
-				query.add(qi);
-			}
-
-			virtual void flushSymbol(ConstStrA word,natural page, natural line, natural col) {
-				if (word == ConstStrA(',')) nextGroup = true;
-				else if (word == ConstStrA('-')) nextIsExclusion = true;
+			virtual void fileIsBinary() override
+			{
+				throw std::exception("The method or operation is not implemented.");
 			}
 
 
-			virtual void fileIsBinary() {
 
-			}
+			AutoArray<BaseWord> words;
+			bool nextIsEnd;
+			bool nextIsGroup;
+			bool caseNormalize;
+			bool nextIsExcluded;
 
 		};
 

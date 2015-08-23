@@ -8,5 +8,6 @@ namespace SourceIndex {
 	typedef Bin::natural32 WordID;
 
 	WordID getWordId(ConstStrA word);
+	WordID getLocaseWordId(ConstStrA word);
 
 }
