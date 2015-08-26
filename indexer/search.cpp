@@ -7,62 +7,32 @@
 namespace SourceIndex {
 
 
-	void Search::search(WordIndex &windex, const Query &query, Result &result)
+	void Search::createDocMap(DocMap &map, const QueryItem &item, WordIndexSet &openedWords) {
+
+		const OpenedWordIndexFile *ofile = wordMap.find(item.word);
+		if (ofile == 0) {
+			OpenedWordsMap::Iterator iter = wordMap.insert(item.word, wordIndex.openWordIndexForRead(item.word));
+			ofile = &iter.getNext().value;
+		}
+		ofile->enumDocuments([&](const DocID &docId, Bin::natural16 count, const WordMatch *matches) {
+			map.insert(&docId,MultiMatchSet(WordMatchSet(matches,count)));
+			return true;
+		});
+
+
+	}
+
+
+	void Search::search(const CQuery &query, Result &result)
 	{
 		result.clear();
-		if (!testQuerySorted(query)) {
-			search2(windex, sortQuery(query),result);
-		}
-		else {
-			search2(windex, query, result);
-		}
-	}
+		if (query.empty()) return;
 
-	bool Search::testQuerySorted(const Query & query)
-	{
-		natural p = 0;
-		for (natural i = 0; i < query.length(); i++) {
-			if (query[i].position > p) return false;
-			p = query[i].position;
-		}
-		return true;
-	}
-
-	class Search::QueryCmp {
-	public:
-		bool operator()(const QueryItem &a, const QueryItem &b){ return a.position < b.position; }
-	};
-
-
-	Search::Query Search::sortQuery(Query query)
-	{
-		HeapSort<Query, QueryCmp> hs(query);
-		hs.sort();
-		return query;
-	}
-
-	natural Search::createDocMap(DocMap &map, const WordIndexSet &wis, const Query &query, natural p, natural group) {
-		while (p < query.length() && query[p].position == group) {
-			wis[p].enumDocuments([&map](const DocID &docId, Bin::natural16 count, const WordMatch *matches){
-				map.insert(&docId, MultiMatchSet(1,WordMatchSet(matches, count)));
-				return true;
-			});
-			p++;
-		}
-		return p;
-	}
-
-	void Search::search2(WordIndex & windex, const Query & query, Result &result)
-	{
-		if (query.empty() || query[0].position == naturalNull) return;
-
-		AutoArray<OpenedWordIndexFile> wordIndexes;
-		for (natural i = 0; i < query.length(); i++) wordIndexes.add(windex.openWordIndexForRead(query[i].word));
 
 		DocMap docMap;
 		DocMap andMap;
 
-		natural p = createDocMap(docMap, wordIndexes, query, 0, query[0].position);
+		natural p = createDocMap(docMap, query, 0, query[0].position);
 
 		if (docMap.empty()) return;
 
@@ -286,7 +256,7 @@ namespace SourceIndex {
 		class TokenizerCB: public AbstractPlainTextTokenizer {
 		public:
 			
-			TokenizerCB(bool caseNormalize) :nextIsBegin(false), nextIsGroup(false),caseNormalize(caseNormalize) {}
+			TokenizerCB(bool caseNormalize) :nextIsEnd(false), nextIsGroup(false),caseNormalize(caseNormalize) {}
 
 			struct BaseWord {
 				WordID word;
@@ -349,7 +319,7 @@ namespace SourceIndex {
 
 			virtual void fileIsBinary() override
 			{
-				throw std::exception("The method or operation is not implemented.");
+
 			}
 
 

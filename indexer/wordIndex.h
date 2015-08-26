@@ -6,7 +6,7 @@
 #include "lightspeed/base/containers/map.h"
 #include "tokenizer.h"
 #include "BinMap.h"
-#include <xstddef>
+
 namespace SourceIndex {
 
 	using namespace LightSpeed;

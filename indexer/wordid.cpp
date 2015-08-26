@@ -2,6 +2,7 @@
 #include "lightspeed/utils/crc32.h"
 #include "lightspeed/base/streams/utf.h"
 #include "lightspeed/base/iter/typeconv.h"
+#include <cwctype>
 
 namespace SourceIndex {
 

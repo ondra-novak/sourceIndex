@@ -167,8 +167,8 @@ namespace SourceIndex {
 	void SourceIndex::BinMap<Key, Value, Order>::merge(const BinMap &a, const BinMap &b)
 	{
 		SeqFileOutBuff<> outFile(fname, OpenFlags::create | OpenFlags::truncate | OpenFlags::commitOnClose | OpenFlags::accessSeq);
-		Super::Iterator ia = a.getFwIter();
-		Super::Iterator ib = b.getFwIter();
+		typename Super::Iterator ia = a.getFwIter();
+		typename Super::Iterator ib = b.getFwIter();
 		while (ia.hasItems() && ib.hasItems()) {
 			const KeyValue &ap = ia.peek();
 			const KeyValue &bp = ib.peek();
@@ -196,8 +196,8 @@ namespace SourceIndex {
 	void SourceIndex::BinMap<Key, Value, Order>::merge(const BinMap &a, const BinMap &b, const ValueOrder &vorder)
 	{
 		SeqFileOutBuff<> outFile(fname, OpenFlags::create | OpenFlags::truncate | OpenFlags::commitOnClose | OpenFlags::accessSeq);
-		Super::Iterator ia = a.getFwIter();
-		Super::Iterator ib = b.getFwIter();
+		typename Super::Iterator ia = a.getFwIter();
+		typename Super::Iterator ib = b.getFwIter();
 		while (ia.hasItems() && ib.hasItems()) {
 			const KeyValue &ap = ia.peek();
 			const KeyValue &bp = ib.peek();

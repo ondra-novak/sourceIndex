@@ -1,5 +1,5 @@
 #include "BinMap.h"
-#include "lightspeed\base\containers\autoArray.tcc"
+#include "lightspeed/base/containers/autoArray.tcc"
 
 namespace SourceIndex {
 
